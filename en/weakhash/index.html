@@ -34,7 +34,7 @@ MathJax = {
 <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       <h1>weakhash the poor man's way or how to save a memory constant on specific meet-in-the-middle type attacks</h1>
-This post explores an alternative solution to the weakhash CTF task from NorthSec 2020. The ideas presented here are from discussions with teammates and failed code written in May. The only thing left to do was to pick the problem back up and figure out whether the bug was in the idea or the code. This finally took place in September.
+This post explores an alternative solution to the weakhash CTF task from NorthSec 2020. The ideas presented here are from discussions with teammates and failed code written in May. Picking the problem back up and figuring out whether the bug was in the idea or the code finally took place in September.
 <br><br>
 So here's the problem. Let $\langle E,D \rangle$ be DES encryption and decryption respectively on single eight byte blocks. For a given pair $c,p$, find keys $k_1,...,k_t$ such that $E_{k_1}(E_{k_2}(...E_{k_t}(p)...)) = c$.
 <br>
