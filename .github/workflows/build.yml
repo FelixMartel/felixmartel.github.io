@@ -23,8 +23,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: 
-      group: ubuntu-runners
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
