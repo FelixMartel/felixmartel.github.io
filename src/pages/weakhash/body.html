@@ -1,17 +1,26 @@
+<p>
 This post explores an alternative solution to the weakhash CTF task from NorthSec 2020. The ideas presented here are from discussions with teammates and failed code written in May. Picking the problem back up and figuring out whether the bug was in the idea or the code finally took place in September.
-<br><br>
+</p>
+<p>
 So here's the problem. Let $\langle E,D \rangle$ be DES encryption and decryption respectively on single eight byte blocks. For a given pair $c,p$, find keys $k_1,...,k_t$ such that $E_{k_1}(E_{k_2}(...E_{k_t}(p)...)) = c$.
-<br>
-This is a straightforward relaxation of the case where $t = 2$. In such cases, a standard meet-in-the-middle gives you a collision using $O(2^{32})$ memory. (If you need a refresher, <a href="//en.wikipedia.org/wiki/Meet-in-the-middle_attack">wikipedia</a> has your back.) From what I heard after the CTF, people used this technique and a large amount of memory (8 or 16 GB (or more on inefficient data structures)) or less targets and a large amount of computation. On a good implementation the type of memory constant involved would be around $4\cdot 2^{32}$ bytes by storing only a key index and recovering the key using $f: \{0,1\}^{32}\rightarrow \{0,1\}^{64}$ injective (DES has some quirks due to parity bits but you can think of $f$ as setting the lower 32 bits of a 64 bit word for simplicity).
-<br><br>
+</p>
+<p>
+This is a straightforward relaxation of the case where $t = 2$. In such cases, a standard meet-in-the-middle gives you a collision using $O(2^{32})$ memory. (If you need a refresher, <a href="https://en.wikipedia.org/wiki/Meet-in-the-middle_attack">wikipedia</a> has your back.) From what I heard after the CTF, people used this technique and a large amount of memory (8 or 16 GB (or more on inefficient data structures)) or less targets and a large amount of computation. On a good implementation the type of memory constant involved would be around $4\cdot 2^{32}$ bytes by storing only a key index and recovering the key using $f: \{0,1\}^{32}\rightarrow \{0,1\}^{64}$ injective (DES has some quirks due to parity bits but you can think of $f$ as setting the lower 32 bits of a 64 bit word for simplicity).
+</p>
+<blockquote>
 The main trick to save memory is to notice that we can perform the same attack using a small set of $n>1$ fixed keys by expanding our target set through $n^t$ key combinations.
-<br><br>
+</blockquote>
+<p>
 From now on think of these combinations as a tree structure where the edges are different key choices and the nodes are cipher blocks. This tree can be built efficiently depth first. From $c$ we apply $D$ with each key and get $n$ new cipher blocks until sufficient depth.
-<br>
+</p>
+<p>
 For each node, a first technique is to store key indices again. These need less bits since there are less keys. However, contrary to standard mitm it becomes important to avoid reusing table entries. This forces us to give up on branches that would collide which in turn reduces the amount of mitm targets. We can counter this by keeping the table sparse enough and increasing tree depth as needed. During the backward step, we start from a random key and apply $E$ max depth times with each key as specified by our table. We then check whether we have reached $c$.
-<br>
+</p>
+<p>
 A different technique that I like especially is to instead use only 1 bit per entry. Since we are keeping the table sparse anyway, we can use it to trim paths from a similar search tree built by applying $E$.
+</p>
+<p>
+If you are patient both techniques give collisions using 1 GB of memory for $2^{31}$ targets instead of 8 GB. But of course the reasonable thing to do once we have freed some memory is to increase the number of targets to $2^{32}$. You will find a 4 GB version of both methods <a href="https://gist.github.com/FelixMartel/419ff299dbfae388692c5c9c4a335f5a">here</a>.
+</p>
 <br><br>
-If you are patient both techniques give collisions using 1 GB of memory for $2^{31}$ targets instead of 8 GB. But of course the reasonable thing to do once we have freed some memory is to increase the number of targets to $2^{32}$. You will find a 4 GB version of both methods <a href="//gist.github.com/FelixMartel/419ff299dbfae388692c5c9c4a335f5a">here</a>.
-<br><br><br>
 September 24ᵗʰ 2020

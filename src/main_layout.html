@@ -2,17 +2,24 @@
 <html>
   <head>
     <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="icon" href="/favicon.ico"/>
     <title>[[TITLE]]</title>
     <style>
-      nav { border-right: 1px solid black; margin-right: 1em; padding-right: 1em; }
-      html,body { height: 100%; margin: 0px; padding: 0px; }
-      body { display: flex; }
-      main { padding-right: 2em; }
+      body { font: 1rem Arial, Helvetica, sans-serif; }
+      #sitelayout { display: flex; max-width: 1000px; width: 90%; }
+      nav { border-right: 1px solid black; padding: 10px; max-width: max-content}
+      main { padding: 10px; }
+      blockquote { background-color: #d0c0fe7f; padding: 10px; }
+      @media (max-width: 900px) {
+        nav { width: 15px; ul { visibility: hidden; } }
+        nav:hover { width: inherit; ul { visibility: visible; } }
+      }
     </style>
 [[MATH]]
-  </head>
+  </head> 
   <body>
+    <div id="sitelayout">
     <nav>
 [[SITEINDEX]]
     </nav>
