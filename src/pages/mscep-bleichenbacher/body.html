@@ -1,0 +1,249 @@
+<p>
+The year is 2018 and you need for network devices to authenticate to your network using their own certificate. A solution exists, SCEP, and it sounds promising: the key material will be generated on the device itself and a challenge password sent along a certificate signing request (CSR).
+</p>
+<p>
+In this post let's look at SCEP as it is implemened in the Windows Network Device Enrollement Service (NDES). This is the thought process behind finding a Bleichenbacher padding oracle in NDES.
+</p>
+<h2>asking NDES to sign our certificate</h2>
+<p>In pinciple you could attempt reversing mscep.dll but a black box approach is less intimidating. By setting up a machine-in-the-middle between client and server you can go from knowing nothing about SCEP to learning what messages are exchanged when clients request certificates (this is what was done at the time but present me does not have a client so I used <a href="https://github.com/FelixMartel/scepish">my own script</a> here). Sadly, the answer here is ASN.1 binary payloads.</p>
+<h3>ASN.1 pain</h3>
+<pre>
+GET /certsrv/mscep/mscep.dll/pkiclient.exe?operation=PKIOperation&message=MIIJ7QYJKoZIhvcNAQcCoIIJ3jCCCdoCAQExDzANBglghkgBZQMEAgMFADCCBNUGCSqGSIb3DQEHAaCCBMYEggTCMIIEvgYJKoZIhvcNAQcDoIIErzCCBKsCAQAxggFjMIIBXwIBADBHMDAxCzAJBgNVBAYTAlVTMSEwHwYDVQQDExhXSU4tME5MM05KVDQwVUotTVNDRVAtUkECE0MAAAAEphIxTBrPaBgAAAAAAAQwDQYJKoZIhvcNAQEBBQAEggEAs96mg5qARoxyPyDZNOHyVPRkdminsxV2IomDHEgnmd%2FvqXV7VCRI7bXUoY2aFfveO3laRiE9nXUm3VOkvTztQ2%2B6axEaYGVEw6Qx08X%2BnwaFpLkuT5r8vEUWygObGmk7rUT130XsmsBOujpUMOpZ4FqpSDn5fy%2Bj5rMFYxShEKdwtzzwilbAjh2ogGpBuuS0Bh1jixySd8RSZgpIV138WJsMXst2byRP7X35ICkJ9laVA89VDMSFdUsQWsoBY1hsYyUbaszCkVj9DjhLjrvONaa5TLCgTKYULnBflhtUjQSryG4q0RBW%2F67az1%2BmBNYoBMIF3pG82lopkkKGRl17sTCCAz0GCSqGSIb3DQEHATAUBggqhkiG9w0DBwQIAAAAAAAAAACAggMYSO%2F9jSmaM9EJoDRx2woxJSHxRCjtRMyBTqxiKppZUz4aJdgZW0amE4Ce9grUm2Qi00uPGXsaqNoXLktbviSUMj7v7hi4uWt20lOlAWjiPZU8iYqTnh6YXATc1Jd5mtgQdUW4INXEpppq5xfKOqVPL3%2FsXfqh%2FpBuJ%2FVUWXbH1ectlWM4yYySg8olHj1W%2BdtDJEyh8%2FUD%2FMODOZ4w3F9Qi6886XmegfaDbMMYVRs%2BdpD5EW6s1onrd8w4OislqAO4%2F1UcZYPZQryRkNO%2FfJowNq8Fqw%2F0MzY5GSI%2BDpcJ5NRIIX8IGSAybahhZLrBkqvOxu4xjiOtwTal8mWAAx5mFbSRpOktd75xl2XtwCi6ZzcQ8PCgxQNQ5kAslOF5B86OKy0qux1oZCmoDLzND1yEbMulx5NnULlHJcwUZs%2BBorNYy6V74lwk%2Fgb%2FmVgVSmn6ZXE2iMjxbRHn3AAmsPMytj3j8WkSfNjIadZJtuQzFoC8oe6gN%2FQT0NvSBtFBSnUSUEZkJH8xNDk2AqQcPIGTN8Ywqz6vDKwEDqKe6pPw8fvb3%2FOFr4CxTzX5d9xWkDLtE4YBpoVIHK9CO2O%2BHpeKsBis8gp%2B0vkKJwCkPAg84DOq1pP4Os3O%2FzIcDMfsxV%2FFPWY1nC8CWGZQItPgZ9Bm5ubdt9AKYd7LeDKM9bkVZfAQ%2Bv2D2%2FVcLlO8kLutAEqs666y1PE1OkJ9Rov8yr1Ryo94CGTM8pyXrIqOUhy0MYjyCRouwHH2NecFlUjf7nhPXP1aBwdtclRTGDE0PTURE6VKKYei8tzD9%2BJOEEWWlfqY8NiRbFyroaudFC8GfXfITiLe6iqH7twt2lV6tyK5zSS%2FHJQ6upD%2FM99TFdcSRoWiSH%2BfZLX2D0ZrVob5vP3EMm0fuW4nyK1Uc83oRYCQXIS3ot%2B1kRWA%2B7Ol9GqNakGuxB1pyQ8P95cWDg3I%2FiZeU1H3VB%2Fwa4glrZgp3UOutgB2FGpGEr0%2FuNQc30vw7kYUV1MQClg86IwcpkGvMvg3Tha3OY7QAGGBlR2PVcVRZWzdUKcf01CFoIICpTCCAqEwggGJoAMCAQICAQEwDQYJKoZIhvcNAQENBQAwFDESMBAGA1UEAwwJcG9pbnRsZXNzMB4XDTI0MDMxNzAyNDM0MVoXDTI0MDMxODAyNDM0MVowFDESMBAGA1UEAwwJcG9pbnRsZXNzMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkKoO46JYNJ6m6yuevnvl0wxCEy50PJokvCboRLAri3Dd3fihFmBSqeF0%2BVjvc7JCTCenSwoelJoTWNNDzhygkiByzxTecvIKFRoo1cV5%2Bo%2BEM7FQgC7ZXEkNLcf8OVHAuDf9Ar81NPow5uKivCtAeOimeU7pyUvXTr%2Bk7hZDQiCdV6hzpkKnwK3f2%2BaPnkUU8LD7p8TT4dHCyk4Ha7CuHUMgquv7yAaHN1y9duQULPZqNj6px0gAv37fuhjvpvY8bE2FqKy9o1KnbZiC%2FacsYjfeQuHCx4jpJ%2Bx1Yk4%2B1E0K9h9lwV35HX0JsQDAnLds3daVCTZzGJ2jLGTWgKfulQIDAQABMA0GCSqGSIb3DQEBDQUAA4IBAQBMYJC7pcRKt6jUxjuavtir8CIpslagcdVxU5aLLvtBBUmCtKxo35cRbTocjHo2tqjp2ef4Zr0t8i%2FiUIOGwhlYAH%2BFf35J11j2TjOE3L5IifnleUOYBJKFwRIa42i%2FIU3%2FujzMXKKJl2t88HFvmNWB5y10PlHqBFBfFCSFBEb9%2BQyBIi3bmHZ%2FoxFi61PlxYpGv8s0ozzLB8hb90Tl0Nm8ZBxgG5unUALJnHvRgwSYfJSzAWHVR8Zzx3AkO5ur5JCWnwF5%2BOF%2FqDRzCvgE6R02i%2FZshzgAlK%2FREg5X2oRvnaX5SHJTzlVmBaBx3yOTgmF9t%2BGckZZAxeKKjHRR%2BRIMMYICQDCCAjwCAQEwGTAUMRIwEAYDVQQDDAlwb2ludGxlc3MCAQEwDQYJYIZIAWUDBAIDBQCggfkwEgYKYIZIAYb4RQEJAjEEEwIxOTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNDAzMTcwMjQzNDFaMCAGCmCGSAGG%2BEUBCQUxEgQQigVDoevPfV7vXHzUhlpnnTA4BgpghkgBhvhFAQkHMSoTKDcyRjMwQzY2NDhGRTE4OTNDMjYwMTgwRjJCRDhCRDdDRDU3QkUyQjYwTwYJKoZIhvcNAQkEMUIEQPnwX896JjxBGcHQbYdUy2jYTsx5zrzMxo8F1KoeLc1cFiLV%2FL%2FXhd0bk948NS%2BbMXLEuh6euLZHSvM%2BYvPhqNUwDQYJKoZIhvcNAQENBQAEggEAEPPXG8nQNIuKq4Ko5pWZGGoscuIMQ%2BayOSlnTLDR0KB9wJ5VyW8SQCbQIu7rf8%2BeFIuvosw5Iq53OsH25kYJGWNi67cK1izOhIddQll%2Ft8W%2BxLCAYMZTfslN%2FhvVuxJSTD28jFmXt3JWcLsE4MGOLRpmUvITohOGbIJtC2PJH0wL5ovoi3iB1%2BB0B%2FA%2BZeLAxbwnRD8r4jzdlB4wKLXtK473JTLabzNF31kXRXQMEsSkPeqSer8H8IQ7f%2FUuQH45vXLyon25sEZ0scGmIqlf4leKPAa3OS6iaxG8mxgwGNaopaGIYV0KxYnC3FHmn5NtqgxBz1iUGDreR4pZ7TdmaA%3D%3D HTTP/1.1
+Host: 192.168.122.234
+User-Agent: python-requests/2.31.0
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/x-pki-message
+Server: Microsoft-IIS/10.0
+Date: Sun, 17 Mar 2024 02:43:40 GMT
+Content-Length: 2497
+
+0.	..	*.H..
+.....	.0.	....1.0	..+......0....	*.H..
+...........0....	*.H..
+.......0......1..50..1...0.0.1.0...U...	pointless...0
+.	*.H..
+.............qJ.....[B.R(vE]B...o...[A..47..|~.....[/.f.+QLA~...d8...6`.J.?.b26B.F.:...k.tH....Dk.."A..2..z.....w.S...$T\.O^........".........w=.....eA.[.'..P.F..B....0d...L....4....C.{.....Jod..s.S..!`nS6.l..
+......y..B'Z...|.m..........w...ia..Vg.8.u)....o......60....	*.H..
+...0...*.H..
+....Y....	.....xD.J/............B..^J5......q!..h)B,..t.f$....D...[......:.f..6...|v...j.......,.GvX..&lt;]...|...M.]:.=...E.[7.#.c....C..._....rj..r?....[.Jy.3w.s..f..s3M\B..QhJ..n..=OJS...b....NK.......YD.^......A..-Dp.7..
+.a2&amp;..........A(.......#.1...Vt...SYT...c0....:.O...p3..........`5.(.?.I`9.....*..=.A.s..e..2..[...cx=\..5._N.n.Y...../..V/v....O.........E7.
+T..........,.s...........bjX.A6.....`*q....E..^..!9Dg...q.)..l........C)N*._!U"RWy!0Z\3
+ZB...u.E...*./.+P.|.e}.'...*...q....R..
+m7...x..d.Z.t....c.......o._..
+./r.CQ..z. ...E{.....E#..U..EH.M.1+O.G.........)..p.......c.bq-......5..8.t.9....U..IA....n...{K....qgP;..^..}...^.A..5sA..V.&amp;.....{%B
+..'.IV!jbx.a=u....|K._\.H........`X4....Dn.&gt;E...6..*3d^..i...b......Si..=.p...d....=M....^.B.
+. .......;../.UZ...O&gt;..T....3.K..W.{.....;..C.x	..........S.Jo...m..&lt;2..	..q+......?.....`..
+...K..\M...s.@..'
+....v..Y..i..&lt;6\....f....].L....RX........X.	mh..;:6o......k.T. ...9..i.(....n....0=z...J..W.....GT...e.XG5p.....I.g.....=.9......M.(s..ok..........^.../}..m.z...@...#.....Q6~.%............81....H0O.G\g4 .8..&gt;.^f...&lt;......O5|.t7h./.#.....}.3../.F.B H
+......Z.....M...n?..jhV6".^... .KHt..u.f..Q.=7..F...v..&gt;|MT.o...u..{.5....N	:5m........u.;........6@........]....r...._..r.@.)..b...8...j.,Td.1.L..7....W..`..iQ..y.M.J`.UG..X..&gt;....]...p..
+Q)l......./.."..L.W...1I...6S+..'.-.M..?..e.."..J}*...C...,....c.s...4...uq.$K..#P.....,[D.3.F........4......Gf.	1...0......0g0P1.0..
+	.&amp;...,d....internal1.0..
+	.&amp;...,d....dom1.0...U....dom-WIN-0NL3NJT40UJ-CA..C....A.8u.".3......0	..+.........0..
+`.H...E.	.1...30..
+`.H...E.	.1...00..	+.....7.&1...Issued0..	*.H..
+.	.1..	*.H..
+...0 .
+`.H...E.	.1...{.Qb.G.K.......;0 .
+`.H...E.	.1.....C...}^.\|..Zg.0#.	*.H..
+.	.1.....~.m...^7.J&lt;".`....08.
+`.H...E.	.1*.(72F30C6648FE1893C260180F2BD8BD7CD57BE2B60
+.	*.H..
+.........Z.....d.=.._..m.&lt;.3.:.w3......3r...P..c..L.x....z&lt;...j1....a.r.n....(Y..q..Ru/.....h.k.??[t.zoD.Q.2..:S.U..Q..-.|u......:....Egm...X.d.|.x...F+].q%D].CX...;.M..Q..
+.?....P	.,.y.F.z.....3.B.\r#y..).J..Q7^..7y..&gt;.G.....rDi..$v|...%F.z.+...*.....x8..+.n.N..ow
+</pre>
+<p>Openssl asn1parse should be able to give us some insight.</p>
+<pre>
+$ echo MIIJ7QYJKoZIh... | base64 -d | openssl asn1parse -inform DER -i
+0:d=0  hl=4 l=2541 cons: SEQUENCE          
+4:d=1  hl=2 l=   9 prim:  OBJECT            :pkcs7-signedData
+15:d=1  hl=4 l=2526 cons:  cont [ 0 ]        
+19:d=2  hl=4 l=2522 cons:   SEQUENCE          
+23:d=3  hl=2 l=   1 prim:    INTEGER           :01
+26:d=3  hl=2 l=  15 cons:    SET               
+28:d=4  hl=2 l=  13 cons:     SEQUENCE          
+30:d=5  hl=2 l=   9 prim:      OBJECT            :sha512
+41:d=5  hl=2 l=   0 prim:      NULL              
+43:d=3  hl=4 l=1237 cons:    SEQUENCE          
+47:d=4  hl=2 l=   9 prim:     OBJECT            :pkcs7-data
+58:d=4  hl=4 l=1222 cons:     cont [ 0 ]        
+62:d=5  hl=4 l=1218 prim:      OCTET STRING      [HEX DUMP]:308204BE06092A864886F70D010703A08204AF308204AB020100318201633082015F02010030473030310B30090603550406130255533121301F0603550403131857494E2D304E4C334E4A543430554A2D4D534345502D524102134300000004A612314C1ACF6818000000000004300D06092A864886F70D010101050004820100B3DEA6839A80468C723F20D934E1F254F4647668A7B315762289831C482799DFEFA9757B542448EDB5D4A18D9A15FBDE3B795A46213D9D7526DD53A4BD3CED436FBA6B111A606544C3A431D3C5FE9F0685A4B92E4F9AFCBC4516CA039B1A693BAD44F5DF45EC9AC04EBA3A5430EA59E05AA94839F97F2FA3E6B3056314A110A770B73CF08A56C08E1DA8806A41BAE4B4061D638B1C9277C452660A48575DFC589B0C5ECB766F244FED7DF9202909F6569503CF550CC485754B105ACA0163586C63251B6ACCC29158FD0E384B8EBBCE35A6B94CB0A04CA6142E705F961B548D04ABC86E2AD11056FFAEDACF5FA604D62804C205DE91BCDA5A29924286465D7BB13082033D06092A864886F70D010701301406082A864886F70D0307040800000000000000008082031848EFFD8D299A33D109A03471DB0A312521F14428ED44CC814EAC622A9A59533E1A25D8195B46A613809EF60AD49B6422D34B8F197B1AA8DA172E4B5BBE2494323EEFEE18B8B96B76D253A50168E23D953C898A939E1E985C04DCD497799AD8107545B820D5C4A69A6AE717CA3AA54F2F7FEC5DFAA1FE906E27F5545976C7D5E72D956338C98C9283CA251E3D56F9DB43244CA1F3F503FCC383399E30DC5F508BAF3CE9799E81F6836CC318551B3E7690F9116EACD689EB77CC383A2B25A803B8FF551C6583D942BC9190D3BF7C9A3036AF05AB0FF433363919223E0E9709E4D448217F081920326DA86164BAC192ABCEC6EE318E23ADC136A5F26580031E6615B491A4E92D77BE719765EDC028BA673710F0F0A0C50350E6402C94E17907CE8E2B2D2ABB1D686429A80CBCCD0F5C846CCBA5C7936750B94725CC1466CF81A2B358CBA57BE25C24FE06FF9958154A69FA65713688C8F16D11E7DC0026B0F332B63DE3F169127CD8C869D649B6E4331680BCA1EEA037F413D0DBD206D1414A7512504664247F3134393602A41C3C819337C630AB3EAF0CAC040EA29EEA93F0F1FBDBDFF385AF80B14F35F977DC569032ED138601A685481CAF423B63BE1E978AB018ACF20A7ED2F90A2700A43C083CE033AAD693F83ACDCEFF321C0CC7ECC55FC53D66359C2F0258665022D3E067D066E6E6DDB7D00A61DECB78328CF5B91565F010FAFD83DBF55C2E53BC90BBAD004AACEBAEB2D4F1353A427D468BFCCABD51CA8F780864CCF29C97AC8A8E521CB43188F2091A2EC071F635E7059548DFEE784F5CFD5A07076D7254531831343D351113A54A2987A2F2DCC3F7E24E10459695FA98F0D8916C5CABA1AB9D142F067D77C84E22DEEA2A87EEDC2DDA557AB722B9CD24BF1C943ABA90FF33DF5315D7124685A2487F9F64B5F60F466B5686F9BCFDC4326D1FB96E27C8AD5473CDE84580905C84B7A2DFB5911580FBB3A5F46A8D6A41AEC41D69C90F0FF797160E0DC8FE265E5351F7541FF06B8825AD9829DD43AEB60076146A4612BD3FB8D41CDF4BF0EE46145753100A583CE88C1CA641AF32F8374E16B7398ED0006181951D8F55C551656CDD50A71FD35085
+1284:d=3  hl=4 l= 677 cons:    cont [ 0 ]        
+1288:d=4  hl=4 l= 673 cons:     SEQUENCE          
+1292:d=5  hl=4 l= 393 cons:      SEQUENCE          
+1296:d=6  hl=2 l=   3 cons:       cont [ 0 ]        
+1298:d=7  hl=2 l=   1 prim:        INTEGER           :02
+1301:d=6  hl=2 l=   1 prim:       INTEGER           :01
+1304:d=6  hl=2 l=  13 cons:       SEQUENCE          
+1306:d=7  hl=2 l=   9 prim:        OBJECT            :sha512WithRSAEncryption
+1317:d=7  hl=2 l=   0 prim:        NULL              
+1319:d=6  hl=2 l=  20 cons:       SEQUENCE          
+1321:d=7  hl=2 l=  18 cons:        SET               
+1323:d=8  hl=2 l=  16 cons:         SEQUENCE          
+1325:d=9  hl=2 l=   3 prim:          OBJECT            :commonName
+1330:d=9  hl=2 l=   9 prim:          UTF8STRING        :pointless
+1341:d=6  hl=2 l=  30 cons:       SEQUENCE          
+1343:d=7  hl=2 l=  13 prim:        UTCTIME           :240317024341Z
+1358:d=7  hl=2 l=  13 prim:        UTCTIME           :240318024341Z
+1373:d=6  hl=2 l=  20 cons:       SEQUENCE          
+1375:d=7  hl=2 l=  18 cons:        SET               
+1377:d=8  hl=2 l=  16 cons:         SEQUENCE          
+1379:d=9  hl=2 l=   3 prim:          OBJECT            :commonName
+1384:d=9  hl=2 l=   9 prim:          UTF8STRING        :pointless
+1395:d=6  hl=4 l= 290 cons:       SEQUENCE          
+1399:d=7  hl=2 l=  13 cons:        SEQUENCE          
+1401:d=8  hl=2 l=   9 prim:         OBJECT            :rsaEncryption
+1412:d=8  hl=2 l=   0 prim:         NULL              
+1414:d=7  hl=4 l= 271 prim:        BIT STRING        
+1689:d=5  hl=2 l=  13 cons:      SEQUENCE          
+1691:d=6  hl=2 l=   9 prim:       OBJECT            :sha512WithRSAEncryption
+1702:d=6  hl=2 l=   0 prim:       NULL              
+1704:d=5  hl=4 l= 257 prim:      BIT STRING        
+1965:d=3  hl=4 l= 576 cons:    SET               
+1969:d=4  hl=4 l= 572 cons:     SEQUENCE          
+1973:d=5  hl=2 l=   1 prim:      INTEGER           :01
+1976:d=5  hl=2 l=  25 cons:      SEQUENCE          
+1978:d=6  hl=2 l=  20 cons:       SEQUENCE          
+1980:d=7  hl=2 l=  18 cons:        SET               
+1982:d=8  hl=2 l=  16 cons:         SEQUENCE          
+1984:d=9  hl=2 l=   3 prim:          OBJECT            :commonName
+1989:d=9  hl=2 l=   9 prim:          UTF8STRING        :pointless
+2000:d=6  hl=2 l=   1 prim:       INTEGER           :01
+2003:d=5  hl=2 l=  13 cons:      SEQUENCE          
+2005:d=6  hl=2 l=   9 prim:       OBJECT            :sha512
+2016:d=6  hl=2 l=   0 prim:       NULL              
+2018:d=5  hl=3 l= 249 cons:      cont [ 0 ]        
+2021:d=6  hl=2 l=  18 cons:       SEQUENCE          
+2023:d=7  hl=2 l=  10 prim:        OBJECT            :2.16.840.1.113733.1.9.2
+2035:d=7  hl=2 l=   4 cons:        SET               
+2037:d=8  hl=2 l=   2 prim:         PRINTABLESTRING   :19
+2041:d=6  hl=2 l=  24 cons:       SEQUENCE          
+2043:d=7  hl=2 l=   9 prim:        OBJECT            :contentType
+2054:d=7  hl=2 l=  11 cons:        SET               
+2056:d=8  hl=2 l=   9 prim:         OBJECT            :pkcs7-data
+2067:d=6  hl=2 l=  28 cons:       SEQUENCE          
+2069:d=7  hl=2 l=   9 prim:        OBJECT            :signingTime
+2080:d=7  hl=2 l=  15 cons:        SET               
+2082:d=8  hl=2 l=  13 prim:         UTCTIME           :240317024341Z
+2097:d=6  hl=2 l=  32 cons:       SEQUENCE          
+2099:d=7  hl=2 l=  10 prim:        OBJECT            :2.16.840.1.113733.1.9.5
+2111:d=7  hl=2 l=  18 cons:        SET               
+2113:d=8  hl=2 l=  16 prim:         OCTET STRING      [HEX DUMP]:8A0543A1EBCF7D5EEF5C7CD4865A679D
+2131:d=6  hl=2 l=  56 cons:       SEQUENCE          
+2133:d=7  hl=2 l=  10 prim:        OBJECT            :2.16.840.1.113733.1.9.7
+2145:d=7  hl=2 l=  42 cons:        SET               
+2147:d=8  hl=2 l=  40 prim:         PRINTABLESTRING   :72F30C6648FE1893C260180F2BD8BD7CD57BE2B6
+2189:d=6  hl=2 l=  79 cons:       SEQUENCE          
+2191:d=7  hl=2 l=   9 prim:        OBJECT            :messageDigest
+2202:d=7  hl=2 l=  66 cons:        SET               
+2204:d=8  hl=2 l=  64 prim:         OCTET STRING      [HEX DUMP]:F9F05FCF7A263C4119C1D06D8754CB68D84ECC79CEBCCCC68F05D4AA1E2DCD5C1622D5FCBFD785DD1B93DE3C352F9B3172C4BA1E9EB8B6474AF33E62F3E1A8D5
+2270:d=5  hl=2 l=  13 cons:      SEQUENCE          
+2272:d=6  hl=2 l=   9 prim:       OBJECT            :sha512WithRSAEncryption
+2283:d=6  hl=2 l=   0 prim:       NULL              
+2285:d=5  hl=4 l= 256 prim:      OCTET STRING      [HEX DUMP]:10F3D71BC9D0348B8AAB82A8E69599186A2C72E20C43E6B23929674CB0D1D0A07DC09E55C96F124026D022EEEB7FCF9E148BAFA2CC3922AE773AC1F6E64609196362EBB70AD62CCE84875D42597FB7C5BEC4B08060C6537EC94DFE1BD5BB12524C3DBC8C5997B7725670BB04E0C18E2D1A6652F213A213866C826D0B63C91F4C0BE68BE88B7881D7E07407F03E65E2C0C5BC27443F2BE23CDD941E3028B5ED2B8EF72532DA6F3345DF591745740C12C4A43DEA927ABF07F0843B7FF52E407E39BD72F2A27DB9B04674B1C1A622A95FE2578A3C06B7392EA26B11BC9B183018D6A8A5A188615D0AC589C2DC51E69F936DAA0C41CF5894183ADE478A59ED376668
+</pre>
+<p>And inside your ASN1, more ASN1.</p>
+<pre>$ echo MIIJ7QYJKoZIh... | base64 -d | openssl asn1parse -inform DER -i -strparse 62 -item PKCS7
+  PKCS7: 
+  type: pkcs7-envelopedData (1.2.840.113549.1.7.3)
+  d.enveloped: 
+    version: 0
+    recipientinfo:
+        version: 0
+        issuer_and_serial: 
+          issuer: C=US, CN=WIN-0NL3NJT40UJ-MSCEP-RA
+          serial: 0x4300000004A612314C1ACF6818000000000004
+        key_enc_algor: 
+          algorithm: rsaEncryption (1.2.840.113549.1.1.1)
+          parameter: NULL
+        enc_key: 
+          0000 - b3 de a6 83 9a 80 46 8c-72 3f 20 d9 34 e1 f2   ......F.r? .4..
+          000f - 54 f4 64 76 68 a7 b3 15-76 22 89 83 1c 48 27   T.dvh...v"...H'
+          001e - 99 df ef a9 75 7b 54 24-48 ed b5 d4 a1 8d 9a   ....u{T$H......
+          002d - 15 fb de 3b 79 5a 46 21-3d 9d 75 26 dd 53 a4   ...;yZF!=.u&amp;.S.
+          003c - bd 3c ed 43 6f ba 6b 11-1a 60 65 44 c3 a4 31   .&lt;.Co.k..`eD..1
+          004b - d3 c5 fe 9f 06 85 a4 b9-2e 4f 9a fc bc 45 16   .........O...E.
+          005a - ca 03 9b 1a 69 3b ad 44-f5 df 45 ec 9a c0 4e   ....i;.D..E...N
+          0069 - ba 3a 54 30 ea 59 e0 5a-a9 48 39 f9 7f 2f a3   .:T0.Y.Z.H9../.
+          0078 - e6 b3 05 63 14 a1 10 a7-70 b7 3c f0 8a 56 c0   ...c....p.&lt;..V.
+          0087 - 8e 1d a8 80 6a 41 ba e4-b4 06 1d 63 8b 1c 92   ....jA.....c...
+          0096 - 77 c4 52 66 0a 48 57 5d-fc 58 9b 0c 5e cb 76   w.Rf.HW].X..^.v
+          00a5 - 6f 24 4f ed 7d f9 20 29-09 f6 56 95 03 cf 55   o$O.}. )..V...U
+          00b4 - 0c c4 85 75 4b 10 5a ca-01 63 58 6c 63 25 1b   ...uK.Z..cXlc%.
+          00c3 - 6a cc c2 91 58 fd 0e 38-4b 8e bb ce 35 a6 b9   j...X..8K...5..
+          00d2 - 4c b0 a0 4c a6 14 2e 70-5f 96 1b 54 8d 04 ab   L..L...p_..T...
+          00e1 - c8 6e 2a d1 10 56 ff ae-da cf 5f a6 04 d6 28   .n*..V...._...(
+          00f0 - 04 c2 05 de 91 bc da 5a-29 92 42 86 46 5d 7b   .......Z).B.F]{
+          00ff - b1                                             .
+    enc_data: 
+      content_type: pkcs7-data (1.2.840.113549.1.7.1)
+      algorithm: 
+        algorithm: des-ede3-cbc (1.2.840.113549.3.7)
+        parameter: OCTET STRING:
+          0000 - 00 00 00 00 00 00 00 00-                       ........
+      enc_data: 
+        0000 - 48 ef fd 8d 29 9a 33 d1-09 a0 34 71 db 0a 31   H...).3...4q..1
+        000f - 25 21 f1 44 28 ed 44 cc-81 4e ac 62 2a 9a 59   %!.D(.D..N.b*.Y
+        001e - 53 3e 1a 25 d8 19 5b 46-a6 13 80 9e f6 0a d4   S&gt;.%..[F.......
+        002d - 9b 64 22 d3 4b 8f 19 7b-1a a8 da 17 2e 4b 5b   .d".K..{.....K[
+...
+</pre>
+<h3>a Bleichenbacher padding oracle</h3>
+<p>
+Do organizations use SCEP over TLS? I would hope so, but in fact, it is designed to be usable without. You first need to provide client devices with the CA cetificate out-of-band. Then, an asymmetrically encrypted symmetric key will be sent with a symmetrically encrypted message. This somewhat reimplements what you would see in a TLS RSA handshake and at the time <a href="https://robotattack.org/">ROBOT</a> was in the news. The same classic Bleichenbacher padding oracle can be attempted on SCEP implementations.
+</p>
+<p>
+To test this idea you send two certificate signing requests but change the enc_key part. In the first one send a well padded symmetic key and in the other one a value that is not well padded. For example, you apply the server public key on the following padded plaintexts:
+</p>
+<pre>00|02|FF...FF|00|12345</pre>
+<pre>00|00|00...00|00|12345</pre>
+<p>
+You then look for differences in the respective ASN1 responses.
+</p>
+<pre>
+$ openssl asn1parse -inform DER -in response1 > response1.txt
+$ openssl asn1parse -inform DER -in response2 > response2.txt
+$ diff response1.txt response2.txt
+55c55
+&lt;   286:d=8  hl=2 l=  11 prim: PRINTABLESTRING   :-2146893819
+---
+&gt;   286:d=8  hl=2 l=  11 prim: PRINTABLESTRING   :-2146893815
+59c59
+&lt;   315:d=8  hl=2 l=  16 prim: OCTET STRING      [HEX DUMP]:29EDFF76A537D94586053B20AF077BCC
+---
+&gt;   315:d=8  hl=2 l=  16 prim: OCTET STRING      [HEX DUMP]:48E39B2FF361A445A61B41CC480E17D2
+63c63
+&lt;   349:d=8  hl=2 l=  16 prim: OCTET STRING      [HEX DUMP]:5F24EA0EBD81346199132ED7191F2075
+---
+&gt;   349:d=8  hl=2 l=  16 prim: OCTET STRING      [HEX DUMP]:35F2D5E2E1F5C41E908389C0CA1ABE51
+71c71
+&lt;   420:d=8  hl=2 l=  40 prim: PRINTABLESTRING   :B26282EF38A2BD575CB7782ADD615C5640BC8FB4
+---
+&gt;   420:d=8  hl=2 l=  40 prim: PRINTABLESTRING   :410F58CA21A82D6A40D4204DB1C56FB46A93CD5E
+75c75
+&lt;   477:d=5  hl=4 l= 256 prim: OCTET STRING      [HEX DUMP]:0F0EBB55BD1A83859ABE296ADA1BB260CDB7B58CCE7916116F9A70FA6E3893D53C12176661C6B8ECDCDA09DD65836A4152ACDFBEF33E69DB277BF503B6B3073F7809F84974F0996F08CBD51F0A6A31071F34DA0F5903C08840A23996F6E2BCF4C915D97AD49CDE0B40BE00B502154EEEBFB3910F554205CBA606A054F77BB0410D7D645576CA4529C9548FEBBE8E9D09EC232BA886DB1C8C6B2BFAF38C20620C2E8FC0A4EC81D5C791CDF68AC87BF89D4BF4712B53F1D93BA6FFCD97EE9B7606929D47F162A9DD985A9B1CB311EB8BA691F73431BFE0E96DC63DE839C0C19604C09496BE0662463275A758766ACB9E453A869DB3E93F88735F48FBDA1B9A1671
+---
+&gt;   477:d=5  hl=4 l= 256 prim: OCTET STRING      [HEX DUMP]:8BB31689EA2D9ABD1B6776A15E22723B47BC1127C7F7EF43F464BD42D3EE8D62EB42F13F47F309973D24EF5B4899704484C90F9AE14422F8779C617A1233A65EAA94C53A88137C3247511A64B51CFE468640AA0F98030C89E32EFAC7B52DBDFB674298A2ECAEB7E1E9C3DD2CD3C4F6A20361E581FBA33A00020F94ABF5ED0C8153C42E792CEC517E395595AB4C6268634267C7C196F95AF579A41E39609958A11E7E9E548400597F96DB36F0E3FD7515B88D961D3C8D1FCEB4FE68507B1A2F1966EB928C62B41EE661176E83E948786F95304824C0213ECF62E1BE6DFA50C7D27CAFD0B1CE1F33B5CBF62988A101BC7AEF8AA8EFD88647F167275DA98FB44479
+</pre>
+<pre>
+</pre>
+<p>
+The difference is found at offset 286. This is an error code identified by oid 1.3.6.1.4.1.311.21.33 (it probably has a nicer name internally). With more test cases you can find that the response is -2146893815 when the plaintext is well padded. Otherwise, the response is -2146893819. When the key is well padded and of the exact symmetric key length, the response is also -2146893819. In practice this means that those cases will be missed (false negative) when making use of RSA malleability to find a well padded plaintext. Fortunatly, Bleichenbacher's alogrithm is resilient to such false negatives.
+</p>
+<h3>conclusion</h3>
+<p>Don't expect modern cryptography from a 20+ years-old protocol. ¯\_(ツ)_/¯</p>
+<h3>disclosure</h3>
+<p>
+  <ul>
+    <li>Summer 2018: Bug found</li>
+    <li>Void period where I was not working in sofware security</li>
+    <li>May 29ᵗʰ 2022: Bug reported to Microsoft</li>
+    <li>September 13ᵗʰ 2022: <a href="https://msrc.microsoft.com/update-guide/vulnerability/CVE-2022-37959">CVE-2022-37959</a> and 1000 $US bounty</li>
+  </ul>
+</p>
+<p>
+<br><br>
+Match 17ᵗʰ 2024
