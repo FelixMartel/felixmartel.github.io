@@ -7,11 +7,13 @@
     <title>[[TITLE]]</title>
     <style>
       body { font: 1rem Arial, Helvetica, sans-serif; }
-      #sitelayout { display: flex; max-width: 1000px; width: 90%; }
-      nav { border-right: 1px solid black; padding: 10px; max-width: max-content; }
+      #sitelayout { display: flex; max-width: min(1000px, calc(100vw - 100px)); }
+      nav { border-right: 1px solid black; padding: 10px; max-width: 150px; }
       nav { ul {position: sticky; top: 40px} }
-      main { padding: 10px; }
+      main { padding: 10px; max-width: inherit; }
       blockquote { background-color: #d0c0fe7f; padding: 10px; }
+      pre { white-space: pre-wrap; overflow-wrap: break-word; }
+      pre { background-color: #d0c0fe7f; }
       @media (max-width: 900px) {
         nav { width: 15px; ul { visibility: hidden; } }
         nav:hover { width: inherit; ul { visibility: visible; } }
