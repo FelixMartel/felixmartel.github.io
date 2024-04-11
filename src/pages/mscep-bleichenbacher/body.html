@@ -5,7 +5,7 @@ The year is 2018 and you need for network devices to authenticate to your networ
 In this post let's look at SCEP as it is implemented in the Windows Network Device Enrollement Service (NDES). This is the thought process behind finding a Bleichenbacher padding oracle in NDES.
 </p>
 <h2>asking NDES to sign our certificate</h2>
-<p>In principle you could attempt reversing mscep.dll but a black box approach is less intimidating. By setting up a machine-in-the-middle between client and server you can go from knowing nothing about SCEP to learning what messages are exchanged when clients request certificates (this is what was done at the time but present me does not have a client so I used <a href="https://github.com/FelixMartel/scepish">my own script</a> here). Sadly, the answer here is ASN.1 binary payloads.</p>
+<p>In principle you could have a look at mscep.dll but a black box approach is less intimidating. By setting up a machine-in-the-middle between client and server you can go from knowing nothing about SCEP to learning what messages are exchanged when clients request certificates (this is what was done at the time but present me does not have a client so I used <a href="https://github.com/FelixMartel/scepish">my own script</a> to generate te samples). Sadly, the answer here is ASN.1 binary payloads.</p>
 <h3>ASN.1 pain</h3>
 <p>An ASN1 request and response.</p>
 <details>
@@ -238,7 +238,7 @@ $ diff response1.txt response2.txt
 <pre>
 </pre>
 <p>
-The difference is found at offset 286. This is an error code identified by oid 1.3.6.1.4.1.311.21.33 (it probably has a nicer name internally). With more test cases you can find that the response is -2146893815 when the plaintext is well padded. Otherwise, the response is -2146893819. When the key is well padded and of the exact symmetric key length, the response is also -2146893819. In practice this means that those cases will be missed (false negative) when making use of RSA malleability to find a well padded plaintext. Fortunately, Bleichenbacher's algorithm is resilient to such false negatives.
+The difference is found at offset 286. This is an error code identified by oid 1.3.6.1.4.1.311.21.33 (it probably has a nicer name internally). With more test cases you can find that the response is -2146893815 when the plaintext is well padded. Otherwise, the response is -2146893819. To be exact, when the key is well padded and of the exact symmetric key length, the response is also -2146893819. In practice this means that those cases will be missed (false negative) when making use of RSA malleability to find a well padded plaintext. Fortunately, Bleichenbacher's algorithm is resilient to such false negatives.
 </p>
 <h3>conclusion</h3>
 <p>Don't expect modern cryptography from a 20+ years-old protocol. ¯\_(ツ)_/¯</p>
