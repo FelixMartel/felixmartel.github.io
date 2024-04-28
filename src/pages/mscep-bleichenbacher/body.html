@@ -5,7 +5,7 @@ The year is 2018 and you need for network devices to authenticate to your networ
 In this post let's look at SCEP as it is implemented in the Windows Network Device Enrollement Service (NDES). This is the thought process behind finding a Bleichenbacher padding oracle in NDES.
 </p>
 <h2>asking NDES to sign our certificate</h2>
-<p>In principle you could have a look at mscep.dll but a black box approach is less intimidating. By setting up a machine-in-the-middle between client and server you can go from knowing nothing about SCEP to learning what messages are exchanged when clients request certificates (this is what was done at the time but present me does not have a client so I used <a href="https://github.com/FelixMartel/scepish">my own script</a> to generate te samples). Sadly, the answer here is ASN.1 binary payloads.</p>
+<p>In principle you could have a look at mscep.dll but a black box approach is less intimidating. By setting up a machine-in-the-middle between client and server you can go from knowing nothing about SCEP to learning what messages are exchanged when clients request certificates (this is what was done at the time but present me does not have a client so I used <a href="https://github.com/FelixMartel/scepish">my own script</a> to generate the samples). Sadly, the answer here is ASN.1 binary payloads.</p>
 <h3>ASN.1 pain</h3>
 <p>An ASN1 request and response.</p>
 <details>
@@ -200,7 +200,7 @@ $ echo MIIJ7QYJKoZIh... | base64 -d | openssl asn1parse -inform DER -i
 </details>
 <h3>a Bleichenbacher padding oracle</h3>
 <p>
-Do organizations use SCEP over TLS? I would hope so, but in fact, it is designed to be usable without. You first need to provide client devices with the CA cetificate out-of-band. Then, an asymmetrically encrypted symmetric key will be sent with a symmetrically encrypted message. This somewhat reimplements what you would see in a TLS RSA handshake and at the time <a href="https://robotattack.org/">ROBOT</a> was in the news. The same classic Bleichenbacher padding oracle can be attempted on SCEP implementations.
+Do organizations use SCEP over TLS? I would hope so, but in fact, it is designed to be usable without. You first need to provide client devices with the CA certificate out-of-band. Then, an asymmetrically encrypted symmetric key will be sent with a symmetrically encrypted message. This somewhat reimplements what you would see in a TLS RSA handshake and at the time <a href="https://robotattack.org/">ROBOT</a> was in the news. The same classic Bleichenbacher padding oracle can be attempted on SCEP implementations.
 </p>
 <p>
 To test this idea you send two certificate signing requests but change the enc_key part. In the first one send a well padded symmetic key and in the other one a value that is not well padded. For example, you apply the server public key on the following padded plaintexts:
