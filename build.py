@@ -34,11 +34,10 @@ def build_page(page_meta):
 
 # todo order by date
 def build_index(page_metas):
+  page_metas = filter(lambda page_meta: not page_meta[1].get("ishome", False), page_metas)
+  page_metas = sorted(page_metas, key = lambda page_meta: page_meta[1].get("date", [0,0,0]), reverse=True)
   index = '<ul>\n<li><a href="/">home</a></li>'
   for page, meta in page_metas:
-    ishome = meta.get("ishome", False)
-    if ishome:
-      continue
     page_dir = path.dirname(page)
     page_name = path.basename(page_dir)
     index += f'\n<li><a href="/{page_name}">{page_name}</a></li>'
