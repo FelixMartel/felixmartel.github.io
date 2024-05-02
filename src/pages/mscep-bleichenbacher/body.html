@@ -238,7 +238,7 @@ $ diff response1.txt response2.txt
 <pre>
 </pre>
 <p>
-The difference is found at offset 286. This is an error code identified by oid 1.3.6.1.4.1.311.21.33 (it probably has a nicer name internally). With more test cases you can find that the response is -2146893815 when the plaintext is well padded. Otherwise, the response is -2146893819. To be exact, when the key is well padded and of the exact symmetric key length, the response is also -2146893819. In practice this means that those cases will be missed (false negative) when making use of RSA malleability to find a well padded plaintext. Fortunately, Bleichenbacher's algorithm is resilient to such false negatives.
+The difference is found at offset 286. This is an error code identified by oid 1.3.6.1.4.1.311.21.33 (it probably has a nicer name internally). With more test cases you can find that the response is -2146893815 when the plaintext is well padded and -2146893819 when it is not. To be exact, when the key is well padded and of the correct symmetric key length, the response is also -2146893819. In practice this does not matter. It simply means that those cases will be missed (false negative) when making use of RSA malleability to find a well padded plaintext. Fortunately, Bleichenbacher's algorithm is resilient to such false negatives as long as they do not happen with overwhelming probability.
 </p>
 <h3>conclusion</h3>
 <p>Don't expect modern cryptography from a 20+ years-old protocol. ¯\_(ツ)_/¯</p>
