@@ -1,4 +1,5 @@
 {
   "title": "when ruby's public_send method is an oddly named eval",
+  "description": "Finding an RCE in a ruby framework called StimulusReflex.",
   "date": [2024,4,11]
 }

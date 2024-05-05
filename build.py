@@ -8,6 +8,7 @@ math_head = open("src/math_head.html").read()
 def build_page(page_meta):
   page, meta = page_meta
   title = meta.get("title", "[[Add a title in meta.json]]")
+  description = meta.get("description", "[[Add a description in meta.json]]")
   ishome = meta.get("ishome", False)
   needsmath = meta.get("needsmath", False)
 
@@ -17,6 +18,7 @@ def build_page(page_meta):
 
   page_out = main_layout
   page_out = page_out.replace("[[TITLE]]", title)
+  page_out = page_out.replace("[[DESCRIPTION]]", description)
   page_out = page_out.replace("[[SITEINDEX]]", site_index)
   page_out = page_out.replace("[[BODY]]", body)
   if needsmath:

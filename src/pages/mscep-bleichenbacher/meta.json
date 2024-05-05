@@ -1,4 +1,5 @@
 {
   "title": "padding oracles in the sky with diamonds",
+  "description": "Finding a padding oracle in a SCEP implementation.",
   "date": [2024,3,17]
 }

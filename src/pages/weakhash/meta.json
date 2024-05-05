@@ -1,5 +1,6 @@
 {
   "title": "weakhash the poor man's way or how to save a memory constant on specific meet-in-the-middle type attacks",
+  "description": "Using bit-sized table entries to solve a ctf task on cheap hardware.",
   "needsmath": true,
   "date": [2020,9,24]
 }
