@@ -74,6 +74,25 @@ def build_rss(page_metas):
 
     f.write('</channel></rss>')
 
+def build_sitemap(page_metas):
+  page_metas = filter(lambda page_meta: not page_meta[1].get("ishome", False), page_metas)
+
+  with open(f"build/sitemap.xml","w") as f:
+    f.write('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+
+    for page, meta in page_metas:
+      date = meta.get("date", [0, 0, 0])
+
+      page_dir = path.dirname(page)
+      page_name = path.basename(page_dir)
+
+      f.write('<url>')
+      f.write(f'<lastmod>{date[0]}-{date[1]}-{date[2]}</lastmod>')
+      f.write(f'<loc>https://blog.lixtelnis.com/{page_name}</loc>')
+      f.write('</url>')
+
+    f.write('</urlset>')
+
 pages = glob("src/pages/*/meta.json")
 page_metas = [(page, json.load(open(page))) for page in pages]
 
@@ -83,3 +102,4 @@ for page_meta in page_metas:
   build_page(page_meta)
 
 build_rss(page_metas)
+build_sitemap(page_metas)
