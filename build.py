@@ -87,7 +87,7 @@ def build_sitemap(page_metas):
       page_name = path.basename(page_dir)
 
       f.write('<url>')
-      f.write(f'<lastmod>{date[0]}-{date[1]}-{date[2]}</lastmod>')
+      f.write(f'<lastmod>{date[0]}-{date[1]}-{date[2]}T12:00:00-05:00</lastmod>')
       f.write(f'<loc>https://blog.lixtelnis.com/{page_name}</loc>')
       f.write('</url>')
 
