@@ -84,20 +84,21 @@ obj.methods.select do |name|
   obj.method(name).parameters.flatten.count { |type| type == :req or type == :opt } > 0
 end
 </pre>
-<p>Among the results is the render_collection method. This is a thin wrapper around a call to the render method and it supports passing in a template as a string.</p>
+<p>Among the results is the StimulusReflex::Reflex#render_collection method. This is a thin wrapper around a call to the ActionController::Base#render method and it supports passing in a template as a string.</p>
 <pre>
 \"target\":\"StimulusReflex::Reflex#render_collection\",\"args\":[{\"inline\": \"&lt;% system('id') %&gt;\"}]
 </pre>
-<h3>disclosure</h3>
 <p>
-    <ul>
-        <li>September 12ᵗʰ 2023: Disclosed vulnerability to the maintainer via github</li>
-        <li>September 12ᵗʰ 2023: Maintainer writes a patch the same day. Yay for OSS! </li>
-        <li>January 3ʳᵈ 2024: Maintainer is planning a release soon</li>
-        <li>March 1ˢᵗ 2024: Reminder of public disclosure</li>
-        <li>March 6ᵗʰ 2024: CVE-2024-28121 assigned</li>
-        <li>March 12ᵗʰ 2024: Patch released</li>
-    </ul>
+This works because even though the inner render method uses a variable amount of arguments, the outer render_collection does not.
 </p>
+<h3>disclosure</h3>
+  <ul>
+      <li>September 12ᵗʰ 2023: Disclosed vulnerability to the maintainer via github</li>
+      <li>September 12ᵗʰ 2023: Maintainer writes a patch the same day. Yay for OSS! </li>
+      <li>January 3ʳᵈ 2024: Maintainer is planning a release soon</li>
+      <li>March 1ˢᵗ 2024: Reminder of public disclosure</li>
+      <li>March 6ᵗʰ 2024: CVE-2024-28121 assigned</li>
+      <li>March 12ᵗʰ 2024: Patch released</li>
+  </ul>
 <br><br>
 April 11ᵗʰ 2024
