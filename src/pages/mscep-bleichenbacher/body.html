@@ -4,7 +4,7 @@ The year is 2018 and you need for network devices to authenticate to your networ
 <p>
 In this post let's look at SCEP as it is implemented in the Windows Network Device Enrollement Service (NDES). This is the thought process behind finding a Bleichenbacher padding oracle in NDES.
 </p>
-<h2>asking NDES to sign our certificate</h2>
+<h3>asking NDES to sign our certificate</h3>
 <p>In principle you could have a look at mscep.dll but a black box approach is less intimidating. By setting up a machine-in-the-middle between client and server you can go from knowing nothing about SCEP to learning what messages are exchanged when clients request certificates (this is what was done at the time but present me does not have a client so I used <a href="https://github.com/FelixMartel/scepish">my own script</a> to generate the samples). Sadly, the answer here is ASN.1 binary payloads.</p>
 <h3>ASN.1 pain</h3>
 <p>An ASN1 request and response.</p>
