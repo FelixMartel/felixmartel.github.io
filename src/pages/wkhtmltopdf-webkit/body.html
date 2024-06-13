@@ -1,0 +1,32 @@
+<p>
+Wkhtmltopdf is a project that renders html documents as pdfs. For a while now it has been unmaintained and comes with <a href="https://wkhtmltopdf.org/status.html">warnings</a> to the effect of  "don't run this software on untrusted html or else...". This post details how to exploit wkhtmltopdf.
+</p>
+<p>
+Despite the warnings it is still used by some web applications to produce dynamic pdfs. Some projects are not aware of the issue, understandably since this is often a vulnerabilty in the dependency (webkit) of a dependency (wkhtmltopdf wrapper such as wicked pdf)'s dependency (wkhtmltopdf). Or even one layer deeper if we see webkit as qt dependency. Other projects are aware of the issue and perform input sanitization before rendering the pdf.
+</p>
+<h3>browser archeology</h3>
+<p>
+It's time for some browser archeology. Indeed, wkhtmltopdf is based on a version of webkit that as been frozen in time and gets statically linked into the release binary. Looking at the changelog from the <a href="https://github.com/wkhtmltopdf/qt/tree/cb88757e7c9383a0504689c8373c101a44214132/src/3rdparty/webkit">source repo</a> it dates back to 2012. Multiple searches and poc attemps later we and up with CVE-2012-3748. It comes with a
+<a href="https://scarybeastsecurity.blogspot.com/2017/05/ode-to-use-after-free-one-vulnerable.html">blog post</a> from Chris Evans targeting the Konqueror browser.
+</p>
+<p>
+It is sufficient to replace the offsets from the Konqueror poc with the ones from wkhtmltopdf to pop xcalc. I won't include this code since we are going to improve it in the next section.
+</p>
+<h3>getting rid of offsets</h3>
+<p>
+Offsets dependent on the wkhtmltopdf build
+</p>
+<ul>
+  <li>JSUint8Array vtable to write a functional fake object in memory</li>
+  <li>address of strtol in .got.plt</li>
+</ul>
+<p>
+Offsets dependent on the libc build
+</p>
+<ul>
+  <li>relative position of strtol and system</li>
+</ul>
+<pre>
+</pre>
+<br><br>
+June 12ᵗʰ 2024
