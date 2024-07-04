@@ -1,8 +1,8 @@
 <p>
-Wkhtmltopdf is a project that renders html documents as pdfs. For a while now it has been unmaintained and comes with <a href="https://wkhtmltopdf.org/status.html">warnings</a> to the effect of  "don't run this software on untrusted html or else...". This post details how to exploit wkhtmltopdf.
+Wkhtmltopdf is a project that renders html documents as pdfs. For a while now it has been unmaintained and comes with multiple <a href="https://wkhtmltopdf.org/status.html">warnings</a> to the effect of "don't run this software on untrusted html or else...". This post details wkhtmltopdf exploitation for arbitrary code execution.
 </p>
 <p>
-Despite the warnings it is still used by some web applications to produce dynamic pdfs. Some projects are not aware of the issue, understandably since this is often a vulnerabilty in the dependency (webkit) of a dependency (wkhtmltopdf wrapper such as wicked pdf)'s dependency (wkhtmltopdf). Or even one layer deeper if we see webkit as qt dependency. Other projects are aware of the issue and perform input sanitization before rendering the pdf.
+Despite the warnings it is still used by some web applications to produce dynamic pdfs. Some projects are not aware of the issue, understandably since this is often a vulnerabilty in the dependency (webkit) of a dependency (wkhtmltopdf wrapper such as wicked pdf)'s dependency (wkhtmltopdf). Or even one layer deeper if we see webkit as qt dependency. Other projects are aware of the issue and perform input sanitization before rendering the pdf. There's also the possibility of using wkhtmltopdf with an up-to-date shared library version of qt, in which case the content of this blog post does not apply.
 </p>
 <h3>browser archeology</h3>
 <p>
@@ -10,7 +10,7 @@ It's time for some browser archeology. Indeed, wkhtmltopdf is based on a version
 <a href="https://scarybeastsecurity.blogspot.com/2017/05/ode-to-use-after-free-one-vulnerable.html">blog post</a> from Chris Evans targeting the Konqueror browser.
 </p>
 <p>
-It is sufficient to replace the offsets from the Konqueror poc with the ones from wkhtmltopdf to pop xcalc. I won't include this code since we are going to improve it in the next section.
+It is sufficient to replace the offsets from the Konqueror poc with the ones from wkhtmltopdf to pop xcalc. In the next section we try to improve on this poc version.
 </p>
 <h3>getting rid of offsets</h3>
 <p>
@@ -26,7 +26,26 @@ Offsets dependent on the libc build
 <ul>
   <li>relative position of strtol and system</li>
 </ul>
+<h3>arbitrary address read</h3>
+<p>webkit is compiled without jit<a href="https://github.com/wkhtmltopdf/wkhtmltopdf/blob/dd7249e4abe9fea2fe15a523389fd7de396ef4d5/scripts/build.py#L114">without jit</a></p>
+<ul>
+  <li>search for rop gadgets using our memory read</li>
+  <li>find the stack and write a rop chain there</li>
+</ul>
+<h3>arbitrary address write</h3>
+<h3>arbitrary command execution</h3>
+<p>magic pointer within the binary. If it imported libc system for example. QProcess::startDetached</p>
+<p>xref chain from "firefox" to launch("firefox") to QProcess::startDetached. worst case bruteforceable</p>
 <pre>
+QString Data struct             struct vtable
+     ------------------     ---------------------
++0x0 |char lengt      |     |                   |
++0x8 |pointer to +0x30|     |                   |
+    ...              ...   ...                 ...
++0x28|                |     |startDetached ptr  |
++0x30|utf-16 char     |     |                   |
+    ...              ...   ...                 ...
 </pre>
+<p><a href="https://github.com/FelixMartel/exploits/tree/master/wkhtmltopdf-webkit">poc source</a></p>
 <br><br>
 June 12ᵗʰ 2024
