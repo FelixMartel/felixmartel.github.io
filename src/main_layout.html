@@ -10,17 +10,29 @@
     <meta property="article:published_time" content="[[DATE]]"/>
     <meta property="og:url" content="[[URL]]"/>
     <style>
-      body { font: 1rem Arial, Helvetica, sans-serif; }
-      #sitelayout { display: flex; max-width: min(1000px, calc(100vw - 100px)); }
-      nav { border-right: 1px solid black; padding: 15px; max-width: 150px; }
-      nav { ul {position: sticky; top: 40px} }
-      main { padding: 15px; max-width: inherit; }
+      body {
+        font: 1rem Arial, Helvetica, sans-serif;
+        display: flex;
+        justify-content: center;
+      }
+      #sitelayout { display: flex; max-width: min(900px, calc(100vw - 100px)); }
+      nav { padding: 15px; max-width: 150px; }
+      nav {
+        ul {
+          list-style: circle;
+          position: sticky;
+          top: 50px;
+        }
+        h1 { position: relative; right: 40px; visibility: hidden; color: gray; }
+      }
+      main { padding: 15px; width: 100%}
       blockquote { background-color: #d0c0fe7f; padding: 10px; }
       pre { white-space: pre-wrap; overflow-wrap: anywhere; }
       pre { background-color: #d0c0fe7f; }
+      #nowrap { text-wrap: nowrap; overflow: scroll; width: 100%;}
       @media (max-width: 900px) {
-        nav { width: 15px; ul { visibility: hidden; } }
-        nav:hover { width: inherit; ul { visibility: visible; } }
+        nav { width: 15px; #navhide { visibility: hidden; } h1 { visibility: visible; } }
+        nav:hover { width: inherit; #navhide { visibility: visible; } h1 { visibility: hidden; } }
       }
     </style>
 [[MATH]]
