@@ -1,6 +1,6 @@
 import json
 from glob import glob
-from os import path, mkdir
+from os import path, mkdir, makedirs
 from datetime import date
 
 main_layout = open("src/main_layout.html").read()
@@ -96,6 +96,13 @@ def build_sitemap(page_metas):
 
     f.write('</urlset>')
 
+def build_redirects(redirect_meta):
+  for src, dst in redirect_meta.items():
+    makedirs(f"build/{src}", exist_ok=True)
+    file_out = open(f"build/{src}/index.html","w")
+    file_out.write(f'<meta http-equiv="refresh" content="0; url=https://blog.lixtelnis.com/{dst}">')
+    file_out.close()
+
 pages = glob("src/pages/*/meta.json")
 page_metas = [(page, json.load(open(page))) for page in pages]
 
@@ -106,3 +113,6 @@ for page_meta in page_metas:
 
 build_rss(page_metas)
 build_sitemap(page_metas)
+
+redirect_meta = json.load(open("redirects.json"))
+build_redirects(redirect_meta)
