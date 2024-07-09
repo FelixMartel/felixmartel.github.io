@@ -17,23 +17,30 @@
       }
       #sitelayout { display: flex; max-width: min(900px, calc(100vw - 100px)); }
       nav { padding: 15px; max-width: 150px; }
-      nav {
-        ul {
+      nav ul {
           list-style: circle;
           position: sticky;
           top: 50px;
-        }
-        h1 { position: relative; right: 40px; visibility: hidden; color: gray; }
       }
-      main { padding: 15px; width: 100%}
+      nav h1 {
+          position: relative;
+          right: 40px;
+          visibility: hidden;
+          color: gray;
+      }
+      main { padding: 15px; width: 100%; }
       blockquote { background-color: #d0c0fe7f; padding: 10px; }
       pre { white-space: pre-wrap; overflow-wrap: anywhere; }
       pre { background-color: #d0c0fe7f; }
       #nowrap { text-wrap: nowrap; overflow: scroll; width: 100%; }
       #wrap { overflow-wrap: anywhere; }
       @media (max-width: 900px) {
-        nav { width: 15px; #navhide { visibility: hidden; } h1 { visibility: visible; } }
-        nav:hover { width: inherit; #navhide { visibility: visible; } h1 { visibility: hidden; } }
+        nav { width: 15px; }
+        nav #navhide { visibility: hidden; }
+        nav h1 { visibility: visible; }
+        nav:hover { width: inherit; }
+        nav:hover #navhide { visibility: visible; }
+        nav:hover h1 { visibility: hidden; }
       }
     </style>
 [[MATH]]
