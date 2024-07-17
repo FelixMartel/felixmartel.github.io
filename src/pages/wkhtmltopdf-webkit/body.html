@@ -5,7 +5,7 @@ Wkhtmltopdf is a project that renders html documents as pdfs. For a while now it
 Despite the warnings it is still used by some web applications to produce dynamic pdfs. Some projects are not aware of the issue, understandably since this is often a vulnerabilty in the dependency (webkit) of a dependency (wkhtmltopdf wrapper such as wicked pdf)'s dependency (wkhtmltopdf). Or even one layer deeper if we see webkit as qt dependency. Other projects are aware of the issue and perform input sanitization before rendering the pdf. There's also the possibility of using wkhtmltopdf with an up-to-date shared library version of qt, in which case the content of this blog post does not apply.
 </p>
 <p>
-To put it simply, years of client-side browser security lessons get flipped server side.
+To put things simply, years of client-side browser security lessons get flipped server side.
 </p>
 <h3>browser archeology</h3>
 <p>
