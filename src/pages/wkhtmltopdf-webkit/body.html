@@ -16,9 +16,8 @@ It's time for some browser archeology. Wkhtmltopdf is based on a version of webk
 It is sufficient to replace the offsets from the Konqueror poc with the ones from wkhtmltopdf to pop xcalc. In the next section we try to improve on this poc.
 </p>
 <h3>getting rid of offsets</h3>
-<p></p>
 <p>
-The base poc relies on multiple file offsets within the wkhtmltopdf build and libc build:
+The base poc relies on multiple file offsets within the wkhtmltopdf and libc build:
 </p>
 <ul>
   <li>JSUint8Array vtable to write a fake object in memory</li>
@@ -37,9 +36,9 @@ The base poc relies on multiple file offsets within the wkhtmltopdf build and li
 <p>Instead we rely on a single magic jump address within the binary. For example, if system was imported from libc for example we could jump to system from a context where we control rdi. execv is imported but one would need to find a context where rdi and rsi are controlled in addition to rip. This is why we target QProcess::startDetached(QString*).</p>
 <p>As apparent from our previous read/write vtable offset conundrum, this version of webkit still uses javascript object with vtables that we can hijack. The plan is to find a virtual function call where this (rdi) is at the same time our fake object and a QString. Replacing the corresponding vtable offset with QProcess::startDetached will then allow us to run arbitrary commands.</p>
 <p>A QString is a pointer to an internal Data structure. This will match the first eight bytes of our fake object, its vtable. At the vtable/data struct address, this will succeed as long as the internal QString Data struct does not overwrite the vtable offset for startDetached.</p>
-<p>When calling fakeobj() from javascript the JSCell getCallData virtual function is called at offset 0x28 in the vtable. This is plenty of space for the data struct.</p>
+<p>When calling fakeobj() from javascript, the JSCell getCallData virtual function is called at offset 0x28 in the vtable. This is plenty of space for the data struct.</p>
 <pre>
-    QString Data struct         struct vtable
+    QString Data struct        fakeobj vtable
      ------------------     ---------------------
 +0x0 |                |     |                   |
 +0x8 |char length     |     |                   |
@@ -49,7 +48,7 @@ The base poc relies on multiple file offsets within the wkhtmltopdf build and li
 +0x30|utf-16 char     |     |                   |
     ...              ...   ...                 ...
 </pre>
-<p>As a last note here are three methods to find the QProcess::startDetached offset. First, there is an xref chain from "firefox" to QProcess::startDetached("firefox" + url). Second, the build process is available so the exact bytes can be found from the qprocess.o file. Third, worst case it should be bruteforceable.</p>
+<p>As a last note here are three methods to find the QProcess::startDetached offset. First, there is an xref chain from "firefox" to QProcess::startDetached("firefox" + url). Second, the build process is available so the exact bytes minus relocation can be found in qprocess.o. Third, worst case it should be bruteforceable.</p>
 <p><a href="https://github.com/FelixMartel/exploits/tree/master/wkhtmltopdf-webkit">poc source</a></p>
 <br><br>
 June 12ᵗʰ 2024
