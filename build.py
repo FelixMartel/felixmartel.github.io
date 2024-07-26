@@ -27,7 +27,7 @@ def build_page(page_meta):
   page_out = page_out.replace("[[TITLE]]", title)
   page_out = page_out.replace("[[DESCRIPTION]]", description)
   page_out = page_out.replace("[[DATE]]", f"{published_time}")
-  page_out = page_out.replace("[[URL]]", f"https://blog.lixtelnis.com/{page_name}")
+  page_out = page_out.replace("[[URL]]", f"https://blog.lixtelnis.com/{page_name}/")
   page_out = page_out.replace("[[SITEINDEX]]", site_index)
   page_out = page_out.replace("[[BODY]]", body)
   if needsmath:
@@ -46,7 +46,7 @@ def build_index(page_metas):
   for page, meta in page_metas:
     page_dir = path.dirname(page)
     page_name = path.basename(page_dir)
-    index += f'\n<li><a href="/{page_name}">{page_name}</a></li>'
+    index += f'\n<li><a href="/{page_name}/">{page_name}</a></li>'
   index += '\n</div></ul>'
   return index
 
@@ -71,7 +71,7 @@ def build_rss(page_metas):
       f.write(f'<title>{title}</title>\n')
       f.write(f'<description>{description}</description>\n')
       f.write(f'<pubDate>{pub_date.strftime("%a, %d %b %Y %H:%M:%S %z")}</pubDate>\n')
-      f.write(f'<link>https://blog.lixtelnis.com/{page_name}</link>\n')
+      f.write(f'<link>https://blog.lixtelnis.com/{page_name}/</link>\n')
       f.write('</item>\n')
 
     f.write('</channel>\n</rss>')
@@ -91,7 +91,7 @@ def build_sitemap(page_metas):
 
       f.write('<url>\n')
       f.write(f'<lastmod>{lastmod}</lastmod>\n')
-      f.write(f'<loc>https://blog.lixtelnis.com/{page_name}</loc>\n')
+      f.write(f'<loc>https://blog.lixtelnis.com/{page_name}/</loc>\n')
       f.write('</url>\n')
 
     f.write('</urlset>')
