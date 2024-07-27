@@ -1,5 +1,5 @@
 {
   "title": "client-supplied server-run javascript again",
-  "description": "exploiting an outdated webkit version in wkhtmltopdf",
+  "description": "Exploiting an outdated webkit version in wkhtmltopdf.",
   "date": [2024,6,12]
 }

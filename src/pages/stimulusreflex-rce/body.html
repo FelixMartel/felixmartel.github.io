@@ -9,7 +9,7 @@ When using a StimulusReflex application, you will see a websocket connection bei
 {"command":"message","identifier":"{\"channel\":\"StimulusReflex::Channel\"}","data":"{\"attrs\":{\"data-reflex\":\"change->DocumentReflex#change_name\",\"data-reflex-dataset\":\"ancestors\",\"class\":\"form-control\",\"value\":\"rename.me.me\",\"data-controller\":\"folders\",\"data-action\":\"change->folders#__perform\",\"checked\":false,\"selected\":false,\"tag_name\":\"INPUT\"},\"dataset\":{\"dataset\":{\"data-reflex\":\"change->DocumentReflex#change_name\",\"data-reflex-dataset\":\"ancestors\",\"data-controller\":\"folders\",\"data-action\":\"change->folders#__perform\",\"data-reflex-root\":\"#folder\",\"data-document-id\":\"543884\"},\"datasetAll\":{}},\"selectors\":[\"#folder\"],\"id\":\"84abfdb3-a58d-4248-a9a2-ad7aa619056a\",\"resolveLate\":false,\"suppressLogging\":false,\"xpathController\":\"//*[@id='document_543884']/div[1]/div[3]/form[1]/input[1]\",\"xpathElement\":\"//*[@id='document_543884']/div[1]/div[3]/form[1]/input[1]\",\"inner_html\":\"\",\"text_content\":\"\",\"reflexController\":\"folders\",\"permanentAttributeName\":\"data-reflex-permanent\",\"target\":\"DocumentReflex#change_name\",\"args\":[],\"url\":\"http://localhost/\",\"tabId\":\"69415f36-c3ce-4922-abb3-1739fcfe77e9\",\"version\":\"3.5.0-pre10\",\"formData\":\"\"}"}
 </pre>
 <p>
-There is a lot of stuff in this message and I don't know what it is all used for but you can see interesting target and args fields: <span id="wrap">\"target\":\"DocumentReflex#change_name\",\"args\":[]</span>. This corresponds to a server-side class and method that will be invoked. Even before reviewing how this invocation is implemented, you can try to change the #method part with a method from the <a href="https://ruby-doc.org/3.2.2/Object.html">object class</a>. Promisingly, this would lead to responses such as "wrong number of arguments (given [], expected [[:req]], optional [])".
+There is a lot of stuff in this message and I don't know what it is all used for but you can see interesting target and args fields: <span class="wrap">\"target\":\"DocumentReflex#change_name\",\"args\":[]</span>. This corresponds to a server-side class and method that will be invoked. Even before reviewing how this invocation is implemented, you can try to change the #method part with a method from the <a href="https://ruby-doc.org/3.2.2/Object.html">object class</a>. Promisingly, this would lead to responses such as "wrong number of arguments (given [], expected [[:req]], optional [])".
 </p>
 <pre>
 {"identifier":"{\"channel\":\"StimulusReflex::Channel\"}","message":{"cableReady":true,"operations":[{"name":"stimulus-reflex:morph-error","payload":{},"stimulusReflex":{"attrs":{"data-reflex":"change-\u003eDocumentReflex#change_name","data-reflex-dataset":"ancestors","class":"form-control","value":"rename.me.me","data-controller":"folders","data-action":"change-\u003efolders#__perform","checked":false,"selected":false,"tagName":"INPUT"},"dataset":{"dataset":{"data-reflex":"change-\u003eDocumentReflex#change_name","data-reflex-dataset":"ancestors","data-controller":"folders","data-action":"change-\u003efolders#__perform","data-reflex-root":"#folder","data-document-id":"543884"},"datasetAll":{}},"selectors":["#folder"],"id":"84abfdb3-a58d-4248-a9a2-ad7aa619056a","resolveLate":false,"suppressLogging":false,"xpathController":"//*[@id='document_543884']/div[1]/div[3]/form[1]/input[1]","xpathElement":"//*[@id='document_543884']/div[1]/div[3]/form[1]/input[1]","innerHtml":"","textContent":"","reflexController":"folders","permanentAttributeName":"data-reflex-permanent","target":"DocumentReflex#method","args":[],"url":"http://localhost/","tabId":"69415f36-c3ce-4922-abb3-1739fcfe77e9","version":"3.5.0-pre10","formData":"","morph":"page"},"error":"wrong number of arguments (given [], expected [[:req]], optional []) ","reflexId":"84abfdb3-a58d-4248-a9a2-ad7aa619056a","operation":"dispatchEvent"}],"version":"5.0.0.pre10"}}
@@ -19,7 +19,7 @@ Yet, at this point no side-effect could be observed when attempting to call meth
 </p>
 <h3>vulnerability</h3>
 <p>
-In this case, finding the relevant security-sensitive code is as simple as searching for "wrong number of arguments (given [], expected [[:req]], optional [])". It is found in <span id="wrap">stimulus_reflex/app/channels/stimulus_reflex/channel.rb</span>
+In this case, finding the relevant security-sensitive code is as simple as searching for "wrong number of arguments (given [], expected [[:req]], optional [])". It is found in <span class="wrap">stimulus_reflex/app/channels/stimulus_reflex/channel.rb</span>
 </p>
 <pre>
 def delegate_call_to_reflex(reflex)
@@ -47,7 +47,7 @@ def process(name, *args)
   run_callbacks(:process) { public_send(name, *args) }
 end
 </pre>
-The crux of the matter is to find what counts as a method with arguments according to the ReflexMethodInvocationPolicy in <span id="wrap">stimulus_reflex/lib/stimulus_reflex/policies/reflex_invocation_policy.rb</span>
+The crux of the matter is to find what counts as a method with arguments according to the ReflexMethodInvocationPolicy in <span class="wrap">stimulus_reflex/lib/stimulus_reflex/policies/reflex_invocation_policy.rb</span>
 <pre>
 module StimulusReflex
   class ReflexMethodInvocationPolicy

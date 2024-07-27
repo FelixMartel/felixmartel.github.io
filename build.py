@@ -36,6 +36,7 @@ def build_page(page_meta):
     page_out = page_out.replace("[[MATH]]", math_head)
   else:
     page_out = page_out.replace("[[MATH]]", "")
+  page_out = page_out.replace("[[ROLLLI]]", post_roll)
 
   file_out = open(f"build/{page_name}/index.html","w")
   file_out.write(page_out)
@@ -50,6 +51,23 @@ def build_index(page_metas):
     page_name = path.basename(page_dir)
     index += '\n' + nav_li.replace("[[PAGENAME]]", page_name).replace("[[PAGELINK]]", f'/{page_name}/')
   return index
+
+def build_roll(page_metas):
+  page_metas = filter(lambda page_meta: not page_meta[1].get("ishome", False), page_metas)
+  page_metas = sorted(page_metas, key = lambda page_meta: page_meta[1].get("date", [0,0,0]), reverse=True)
+  roll = ''
+  for page, meta in page_metas:
+    page_dir = path.dirname(page)
+    page_name = path.basename(page_dir)
+    title = meta.get("title", "[[Add a title in meta.json]]")
+    description = meta.get("description", "[[Add a description in meta.json]]")
+    published_time = date(*meta.get("date", [2020, 1, 1]))
+    roll += roll_li
+    roll = roll.replace("[[PAGELINK]]", f'/{page_name}/')
+    roll = roll.replace("[[TITLE]]", title)
+    roll = roll.replace("[[DESCRIPTION]]", description)
+    roll = roll.replace("[[DATE]]", f'{published_time}')
+  return roll
 
 def build_rss(page_metas):
   page_metas = filter(lambda page_meta: not page_meta[1].get("ishome", False), page_metas)
@@ -108,6 +126,7 @@ pages = glob("src/pages/*/meta.json")
 page_metas = [(page, json.load(open(page))) for page in pages]
 
 site_index = build_index(page_metas)
+post_roll = build_roll(page_metas)
 
 for page_meta in page_metas:
   build_page(page_meta)
