@@ -5,6 +5,8 @@ from datetime import date
 
 main_layout = open("src/main_layout.html").read()
 math_head = open("src/math_head.html").read()
+nav_li = open("src/nav_li.html").read()
+roll_li = open("src/roll_li.html").read()
 
 def build_page(page_meta):
   page, meta = page_meta
@@ -28,7 +30,7 @@ def build_page(page_meta):
   page_out = page_out.replace("[[DESCRIPTION]]", description)
   page_out = page_out.replace("[[DATE]]", f"{published_time}")
   page_out = page_out.replace("[[URL]]", f"https://blog.lixtelnis.com/{page_name}/")
-  page_out = page_out.replace("[[SITEINDEX]]", site_index)
+  page_out = page_out.replace("[[NAVLI]]", site_index)
   page_out = page_out.replace("[[BODY]]", body)
   if needsmath:
     page_out = page_out.replace("[[MATH]]", math_head)
@@ -42,12 +44,11 @@ def build_page(page_meta):
 def build_index(page_metas):
   page_metas = filter(lambda page_meta: not page_meta[1].get("ishome", False), page_metas)
   page_metas = sorted(page_metas, key = lambda page_meta: page_meta[1].get("date", [0,0,0]), reverse=True)
-  index = '<ul>\n<h2>☰</h2>\n<div id="navhide"><li><a href="/">home</a></li>'
+  index = nav_li.replace("[[PAGENAME]]", 'home').replace("[[PAGELINK]]", '/')
   for page, meta in page_metas:
     page_dir = path.dirname(page)
     page_name = path.basename(page_dir)
-    index += f'\n<li><a href="/{page_name}/">{page_name}</a></li>'
-  index += '\n</div></ul>'
+    index += '\n' + nav_li.replace("[[PAGENAME]]", page_name).replace("[[PAGELINK]]", f'/{page_name}/')
   return index
 
 def build_rss(page_metas):
