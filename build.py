@@ -1,10 +1,10 @@
 import json
+import tex2mathml
 from glob import glob
 from os import path, mkdir, makedirs
 from datetime import date
 
 main_layout = open("src/main_layout.html").read()
-math_head = open("src/math_head.html").read()
 nav_li = open("src/nav_li.html").read()
 roll_li = open("src/roll_li.html").read()
 
@@ -31,11 +31,10 @@ def build_page(page_meta):
   page_out = page_out.replace("[[DATE]]", f"{published_time}")
   page_out = page_out.replace("[[URL]]", f"https://blog.lixtelnis.com/{page_name}/")
   page_out = page_out.replace("[[NAVLI]]", site_index)
-  page_out = page_out.replace("[[BODY]]", body)
   if needsmath:
-    page_out = page_out.replace("[[MATH]]", math_head)
+    page_out = page_out.replace("[[BODY]]", tex2mathml.convert(body))
   else:
-    page_out = page_out.replace("[[MATH]]", "")
+    page_out = page_out.replace("[[BODY]]", body)
   page_out = page_out.replace("[[ROLLLI]]", post_roll)
 
   file_out = open(f"build/{page_name}/index.html","w")
