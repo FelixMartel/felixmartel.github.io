@@ -4,6 +4,8 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="icon" href="/favicon.ico"/>
+    <link rel="stylesheet" href="/main.css">
+    <link rel="canonical" href="[[URL]]"/>
     <title>[[TITLE]]</title>
     <meta http-equiv="content-language" content="en">
     <meta name="description" content="[[DESCRIPTION]]">
@@ -11,45 +13,6 @@
     <meta property="og:description" content="[[DESCRIPTION]]"/>
     <meta property="article:published_time" content="[[DATE]]"/>
     <meta property="og:url" content="[[URL]]"/>
-    <style>
-      body {
-        font: 1rem Arial, Helvetica, sans-serif;
-        display: flex;
-        justify-content: center;
-      }
-      #sitelayout { display: flex; max-width: min(900px, calc(100vw - 100px)); }
-      nav { padding: 15px; max-width: 150px; }
-      nav ul {
-          list-style: circle;
-          position: sticky;
-          top: 50px;
-      }
-      nav h2 {
-          position: relative;
-          right: 40px;
-          visibility: hidden;
-          color: gray;
-      }
-      main { padding: 15px; width: 100%; }
-      blockquote { background-color: #d0c0fe7f; padding: 10px; }
-      pre { white-space: pre-wrap; overflow-wrap: anywhere; }
-      pre { background-color: #d0c0fe7f; }
-      .nowrap { text-wrap: nowrap; overflow: scroll; width: 100%; }
-      .wrap { overflow-wrap: anywhere; }
-      .roll { list-style: none; padding: 0; }
-      .rollanchor { text-decoration: none; color: inherit; }
-      .rolldate { float: right; }
-      .rolldesc { padding: 5px 5px 5px 20px; }
-      .rolltitle { font-weight: bold; }
-      @media (max-width: 900px) {
-        nav { width: 15px; }
-        nav #navhide { visibility: hidden; }
-        nav h2 { visibility: visible; }
-        nav:hover { width: inherit; }
-        nav:hover #navhide { visibility: visible; }
-        nav:hover h2 { visibility: hidden; }
-      }
-    </style>
   </head> 
   <body>
     <div id="sitelayout">

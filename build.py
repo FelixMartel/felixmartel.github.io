@@ -4,6 +4,7 @@ from glob import glob
 from os import path, mkdir, makedirs
 from datetime import date
 
+domain = open("CNAME").read()
 main_layout = open("src/main_layout.html").read()
 nav_li = open("src/nav_li.html").read()
 roll_li = open("src/roll_li.html").read()
@@ -17,7 +18,7 @@ def build_page(page_meta):
   needsmath = meta.get("needsmath", False)
 
   page_dir = path.dirname(page)
-  page_name = path.basename(page_dir)
+  page_name = path.basename(page_dir) + "/"
   body = open(f"{page_dir}/body.html").read()
 
   if ishome:
@@ -29,7 +30,7 @@ def build_page(page_meta):
   page_out = page_out.replace("[[TITLE]]", title)
   page_out = page_out.replace("[[DESCRIPTION]]", description)
   page_out = page_out.replace("[[DATE]]", f"{published_time}")
-  page_out = page_out.replace("[[URL]]", f"https://blog.lixtelnis.com/{page_name}/")
+  page_out = page_out.replace("[[URL]]", f"https://{domain}/{page_name}")
   page_out = page_out.replace("[[NAVLI]]", site_index)
   if needsmath:
     page_out = page_out.replace("[[BODY]]", tex2mathml.convert(body))
@@ -71,11 +72,11 @@ def build_roll(page_metas):
 def build_rss(page_metas):
   page_metas = filter(lambda page_meta: not page_meta[1].get("ishome", False), page_metas)
 
-  with open(f"build/rss.xml","w") as f:
+  with open("build/rss.xml","w") as f:
     f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
     f.write('<rss version="2.0">\n<channel>\n')
-    f.write('<title>blog.lixtelnis.com</title>\n')
-    f.write('<link>https://blog.lixtelnis.com/</link>\n')
+    f.write(f'<title>{domain}</title>\n')
+    f.write(f'<link>https://{domain}/</link>\n')
 
     for page, meta in page_metas:
       title = meta.get("title", "[[Add a title in meta.json]]")
@@ -89,7 +90,7 @@ def build_rss(page_metas):
       f.write(f'<title>{title}</title>\n')
       f.write(f'<description>{description}</description>\n')
       f.write(f'<pubDate>{pub_date.strftime("%a, %d %b %Y %H:%M:%S %z")}</pubDate>\n')
-      f.write(f'<link>https://blog.lixtelnis.com/{page_name}/</link>\n')
+      f.write(f'<link>https://{domain}/{page_name}/</link>\n')
       f.write('</item>\n')
 
     f.write('</channel>\n</rss>')
@@ -109,7 +110,7 @@ def build_sitemap(page_metas):
 
       f.write('<url>\n')
       f.write(f'<lastmod>{lastmod}</lastmod>\n')
-      f.write(f'<loc>https://blog.lixtelnis.com/{page_name}/</loc>\n')
+      f.write(f'<loc>https://{domain}/{page_name}/</loc>\n')
       f.write('</url>\n')
 
     f.write('</urlset>')
@@ -118,7 +119,7 @@ def build_redirects(redirect_meta):
   for src, dst in redirect_meta.items():
     makedirs(f"build/{src}", exist_ok=True)
     file_out = open(f"build/{src}/index.html","w")
-    file_out.write(f'<meta http-equiv="refresh" content="0; url=https://blog.lixtelnis.com/{dst}">')
+    file_out.write(f'<meta http-equiv="refresh" content="0; url=https://{domain}/{dst}">')
     file_out.close()
 
 pages = glob("src/pages/*/meta.json")
@@ -135,3 +136,7 @@ build_sitemap(page_metas)
 
 redirect_meta = json.load(open("redirects.json"))
 build_redirects(redirect_meta)
+
+style = open("src/main.css").read()
+with open("build/main.css", "w") as f:
+  f.write(style)

@@ -9,7 +9,7 @@ To put things simply, years of client-side browser security lessons get flipped 
 </p>
 <h3>browser archeology</h3>
 <p>
-It's time for some browser archeology. Wkhtmltopdf is based on a version of webkit that as been frozen in time and gets statically linked into the release binaries. Looking at the changelog from the <a href="https://github.com/wkhtmltopdf/qt/tree/cb88757e7c9383a0504689c8373c101a44214132/src/3rdparty/webkit">source repo</a> it dates back to 2012. Multiple searches and poc attemps later we and up with CVE-2012-3748. It comes with a
+It's time for some browser archeology. Wkhtmltopdf is based on a version of webkit that has been frozen in time and gets statically linked into the release binaries. Looking at the changelog from the <a href="https://github.com/wkhtmltopdf/qt/tree/cb88757e7c9383a0504689c8373c101a44214132/src/3rdparty/webkit">source repo</a> it dates back to 2012. After enough web searches and historical poc attemps, we end up with CVE-2012-3748. It comes with a
 <a href="https://scarybeastsecurity.blogspot.com/2017/05/ode-to-use-after-free-one-vulnerable.html">blog post</a> from Chris Evans targeting the Konqueror browser.
 </p>
 <p>
