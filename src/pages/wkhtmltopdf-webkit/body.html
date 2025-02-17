@@ -37,7 +37,7 @@ The base poc relies on multiple file offsets within the wkhtmltopdf and libc bui
 <p>As apparent from our previous read/write vtable offset conundrum, this version of webkit still uses javascript object with vtables that we can hijack. The plan is to find a virtual function call where this (rdi) is at the same time our fake object and a QString. Replacing the corresponding vtable offset with QProcess::startDetached will then allow us to run arbitrary commands.</p>
 <p>A QString is a pointer to an internal Data structure. This will match the first eight bytes of our fake object, its vtable. At the vtable/data struct address, this will succeed as long as the internal QString Data struct does not overwrite the vtable offset for startDetached.</p>
 <p>When calling fakeobj() from javascript, the JSCell getCallData virtual function is called at offset 0x28 in the vtable. This is plenty of space for the data struct.</p>
-<pre>
+<pre class="nowrap">
     QString Data struct        fakeobj vtable
      ------------------     ---------------------
 +0x0 |                |     |                   |

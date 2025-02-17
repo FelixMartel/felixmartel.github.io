@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: python3 build.py
+      - run: pip install -e pygments && python3 build.py
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact

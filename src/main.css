@@ -3,7 +3,10 @@ body {
   display: flex;
   justify-content: center;
 }
-#sitelayout { display: flex; max-width: min(900px, calc(100vw - 100px)); }
+#sitelayout {
+  display: flex;
+  max-width: min(900px, calc(100vw - 100px));
+}
 nav { padding: 15px; max-width: 150px; }
 nav ul {
   list-style: circle;
@@ -16,11 +19,11 @@ nav h2 {
   visibility: hidden;
   color: gray;
 }
-main { padding: 15px; width: 100%; }
+main { padding: 15px; width: 100%; min-width: 0; }
 blockquote { background-color: #d0c0fe7f; padding: 10px; }
-pre { white-space: pre-wrap; overflow-wrap: anywhere; }
-pre { background-color: #d0c0fe7f; }
-.nowrap { text-wrap: nowrap; overflow: scroll; width: 100%; }
+pre { background-color: #d0c0fe7f; padding: 5px; }
+pre { text-wrap: nowrap; overflow: scroll; }
+.nowrap { text-wrap: nowrap; overflow: scroll; }
 .wrap { overflow-wrap: anywhere; }
 .roll { list-style: none; padding: 0; }
 .rollanchor { text-decoration: none; color: inherit; }
