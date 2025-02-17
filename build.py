@@ -1,8 +1,13 @@
 import json
-import tex2mathml
 from glob import glob
 from os import path, mkdir, makedirs
 from datetime import date
+import re
+
+from pygments import highlight
+from pygments.lexers import get_lexer_by_name
+from pygments.formatters import HtmlFormatter
+import tex2mathml
 
 domain = open("CNAME").read()
 main_layout = open("src/main_layout.html").read()
@@ -37,6 +42,14 @@ def build_page(page_meta):
   else:
     page_out = page_out.replace("[[BODY]]", body)
   page_out = page_out.replace("[[ROLLLI]]", post_roll)
+
+  def repl(match):
+    try:
+      lexer = match.group(1)
+      return highlight(match.group(2), get_lexer_by_name(lexer), HtmlFormatter())
+    except:
+      return match.group(0)
+  page_out = re.sub(r"^\[\[(\w+)$(((?!^\]\]$).)+)^\]\]$", repl, page_out, flags=re.MULTILINE|re.DOTALL)
 
   file_out = open(f"build/{page_name}/index.html","w")
   file_out.write(page_out)
@@ -139,4 +152,8 @@ build_redirects(redirect_meta)
 
 style = open("src/main.css").read()
 with open("build/main.css", "w") as f:
+  f.write(style)
+
+style = open("src/highlight.css").read()
+with open("build/highlight.css", "w") as f:
   f.write(style)
